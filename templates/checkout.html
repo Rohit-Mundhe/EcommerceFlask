@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Checkout – ShopZone{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Checkout</h1>
+
+  <!-- Progress bar -->
+  <div class="checkout-steps">
+    <div class="step done">1. Cart</div>
+    <div class="step-arrow">›</div>
+    <div class="step active">2. Shipping</div>
+    <div class="step-arrow">›</div>
+    <div class="step">3. Confirmation</div>
+  </div>
+
+  <div class="checkout-layout">
+
+    <!-- Shipping form -->
+    <div class="checkout-form-col">
+      <div class="form-card">
+        <h2>📦 Shipping Details</h2>
+        <form method="post">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input type="text" name="full_name" value="{{ user.name if user else '' }}" required/>
+            </div>
+            <div class="form-group">
+              <label>Phone *</label>
+              <input type="tel" name="phone" value="{{ user.phone if user else '' }}" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Address (House No, Street, Area) *</label>
+            <input type="text" name="address" placeholder="123 MG Road, Andheri West" required/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>City *</label>
+              <input type="text" name="city" placeholder="Mumbai" required/>
+            </div>
+            <div class="form-group">
+              <label>State *</label>
+              <input type="text" name="state" placeholder="Maharashtra" required/>
+            </div>
+            <div class="form-group">
+              <label>Pincode *</label>
+              <input type="text" name="pincode" placeholder="400001" maxlength="6" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Order Note (Optional)</label>
+            <textarea name="note" rows="2" placeholder="E.g. Leave at door, ring bell..."></textarea>
+          </div>
+
+          <h2 style="margin-top:24px">💳 Payment Method</h2>
+          <div class="payment-option selected">
+            <input type="radio" name="payment" value="cod" checked id="cod"/>
+            <label for="cod"><strong>💵 Cash on Delivery</strong> – Pay when your order arrives.</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:20px">
+            ✅ Place Order
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order summary -->
+    <div class="checkout-summary-col">
+      <div class="summary-card">
+        <h3>Order Summary</h3>
+        {% for item in cart_items %}
+        <div class="os-row">
+          <span>{{ item.name }} × {{ item.quantity }}</span>
+          <span>₹{{ "%.2f"|format(item.subtotal) }}</span>
+        </div>
+        {% endfor %}
+        <div class="os-divider"></div>
+        <div class="os-row"><span>Delivery</span><span class="green">FREE</span></div>
+        <div class="os-row os-total"><span>Total</span><span>₹{{ total }}</span></div>
+        <p class="savings-note">You save on free delivery!</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
