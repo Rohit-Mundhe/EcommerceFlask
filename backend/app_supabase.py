@@ -278,4 +278,6 @@ def my_orders():
     return render_template('orders.html', orders=orders)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    app.run(debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true',
+            host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
