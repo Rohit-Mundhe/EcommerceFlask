@@ -12,4 +12,4 @@ services:
       - key: SUPABASE_URL
         value: "https://khacikjsbltpkqpcjmfn.supabase.co"
       - key: SUPABASE_KEY
-        sync: false   # Set this to your service_role key in the Render dashboard
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYWNpa2pzYmx0cGtxcGNqbWZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjE4NzI3NCwiZXhwIjoyMDg3NzYzMjc0fQ.Yc6FhGGKaXEcd9j2aTie-mTnzmd7v-t-FeFOql0GE1c"

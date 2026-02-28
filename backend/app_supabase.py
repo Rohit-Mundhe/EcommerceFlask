@@ -1,28 +1,33 @@
 import os
+import sys
 import certifi
-import httpx
 from datetime import timedelta
 from supabase import create_client, Client
-from supabase.lib.client_options import SyncClientOptions
 from flask import (Flask, render_template, jsonify, request,
                    session, redirect, url_for, flash)
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 import logging
 
-os.environ['SSL_CERT_FILE']      = certifi.where()
-os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
-
 # ── Supabase ──────────────────────────────────────────────────────────────────
 SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://khacikjsbltpkqpcjmfn.supabase.co')
 SUPABASE_KEY = os.environ.get('SUPABASE_KEY',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
-    'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYWNpa2pzYmx0cGtxcGNqbWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxODcyNzQsImV4cCI6MjA4Nzc2MzI3NH0.'
-    'wfpuzdQVckgzy1v9rWD-63f4dC9RgI0MXy3BKL8Kjzg')
+    'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoYWNpa2pzYmx0cGtxcGNqbWZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjE4NzI3NCwiZXhwIjoyMDg3NzYzMjc0fQ.'
+    'Yc6FhGGKaXEcd9j2aTie-mTnzmd7v-t-FeFOql0GE1c')
 
-_http = httpx.Client(verify=False)
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY,
-                                  options=SyncClientOptions(httpx_client=_http))
+# On Windows use certifi + verify=False workaround; on Linux (Render) use system certs
+if sys.platform == 'win32':
+    import httpx
+    from supabase.lib.client_options import SyncClientOptions
+    _http = httpx.Client(verify=certifi.where())
+    try:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY,
+                                          options=SyncClientOptions(httpx_client=_http))
+    except TypeError:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+else:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── Flask ─────────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,12 +84,22 @@ def register():
         if len(password) < 6:
             flash('Password must be at least 6 characters.', 'danger')
             return render_template('register.html')
-        if supabase.table('users').select('id').eq('email', email).execute().data:
+        try:
+            existing = supabase.table('users').select('id').eq('email', email).execute().data
+        except Exception:
+            flash('Database error. Please try again later.', 'danger')
+            return render_template('register.html')
+        if existing:
             flash('Email already registered.', 'danger')
             return render_template('register.html')
         hashed = generate_password_hash(password)
-        supabase.table('users').insert(
-            {'name': name, 'email': email, 'password': hashed, 'phone': phone}).execute()
+        try:
+            supabase.table('users').insert(
+                {'name': name, 'email': email, 'password': hashed, 'phone': phone}).execute()
+        except Exception as e:
+            log.error('Register insert failed: %s', e)
+            flash('Could not create account. Please try again later.', 'danger')
+            return render_template('register.html')
         flash('Account created! Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
@@ -96,7 +111,12 @@ def login():
     if request.method == 'POST':
         email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        result   = supabase.table('users').select('*').eq('email', email).execute()
+        try:
+            result = supabase.table('users').select('*').eq('email', email).execute()
+        except Exception as e:
+            log.error('Login query failed: %s', e)
+            flash('Database error. Please try again later.', 'danger')
+            return render_template('login.html')
         if result.data and check_password_hash(result.data[0]['password'], password):
             u = result.data[0]
             session['user'] = {'id': u['id'], 'email': u['email'],
@@ -122,10 +142,14 @@ def profile():
     if request.method == 'POST':
         name  = request.form.get('name', '').strip()
         phone = request.form.get('phone', '').strip()
-        supabase.table('users').update({'name': name, 'phone': phone}).eq('id', u['id']).execute()
-        session['user']['name']  = name
-        session['user']['phone'] = phone
-        flash('Profile updated successfully.', 'success')
+        try:
+            supabase.table('users').update({'name': name, 'phone': phone}).eq('id', u['id']).execute()
+            session['user']['name']  = name
+            session['user']['phone'] = phone
+            flash('Profile updated successfully.', 'success')
+        except Exception as e:
+            log.error('Profile update failed: %s', e)
+            flash('Could not update profile. Please try again.', 'danger')
         return redirect(url_for('profile'))
     db_user = supabase.table('users').select('id,name,email,phone,created_at').eq('id', u['id']).execute().data
     return render_template('profile.html', user=db_user[0] if db_user else u)
@@ -230,27 +254,32 @@ def checkout():
         return redirect(url_for('cart'))
     if request.method == 'POST':
         uid = current_user()['id']
-        order_res = supabase.table('orders').insert({
-            'user_id':          uid,
-            'status':           'confirmed',
-            'payment_method':   'Cash on Delivery',
-            'total_amount':     total,
-            'shipping_name':    request.form.get('full_name', ''),
-            'shipping_phone':   request.form.get('phone', ''),
-            'shipping_address': request.form.get('address', ''),
-            'shipping_city':    request.form.get('city', ''),
-            'shipping_state':   request.form.get('state', ''),
-            'shipping_pincode': request.form.get('pincode', ''),
-            'note':             request.form.get('note', ''),
-        }).execute()
-        order_id = order_res.data[0]['id']
-        for item in items:
-            supabase.table('order_items').insert({
-                'order_id':   order_id,
-                'product_id': item['id'],
-                'quantity':   item['quantity'],
-                'price':      item['price'],
+        try:
+            order_res = supabase.table('orders').insert({
+                'user_id':          uid,
+                'status':           'confirmed',
+                'payment_method':   'Cash on Delivery',
+                'total_amount':     total,
+                'shipping_name':    request.form.get('full_name', ''),
+                'shipping_phone':   request.form.get('phone', ''),
+                'shipping_address': request.form.get('address', ''),
+                'shipping_city':    request.form.get('city', ''),
+                'shipping_state':   request.form.get('state', ''),
+                'shipping_pincode': request.form.get('pincode', ''),
+                'note':             request.form.get('note', ''),
             }).execute()
+            order_id = order_res.data[0]['id']
+            for item in items:
+                supabase.table('order_items').insert({
+                    'order_id':   order_id,
+                    'product_id': item['id'],
+                    'quantity':   item['quantity'],
+                    'price':      item['price'],
+                }).execute()
+        except Exception as e:
+            log.error('Order placement failed: %s', e)
+            flash('Could not place order. Please try again.', 'danger')
+            return redirect(url_for('checkout'))
         session['cart'] = {}
         flash(f'Order #{order_id} placed! You will pay on delivery.', 'success')
         return redirect(url_for('order_confirmation', order_id=order_id))
