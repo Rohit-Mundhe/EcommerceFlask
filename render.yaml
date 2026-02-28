@@ -7,3 +7,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SUPABASE_URL
+        value: "https://khacikjsbltpkqpcjmfn.supabase.co"
+      - key: SUPABASE_KEY
+        sync: false   # Set this to your service_role key in the Render dashboard

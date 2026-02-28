@@ -7,6 +7,7 @@ from supabase.lib.client_options import SyncClientOptions
 from flask import (Flask, render_template, jsonify, request,
                    session, redirect, url_for, flash)
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 import logging
 
 os.environ['SSL_CERT_FILE']      = certifi.where()
@@ -28,6 +29,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'),
             static_folder=os.path.join(BASE_DIR, 'static'))
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.secret_key = os.environ.get('SECRET_KEY', 'shopzone-secret-2026')
 app.permanent_session_lifetime = timedelta(minutes=30)
 logging.basicConfig(level=logging.INFO)
@@ -100,7 +102,10 @@ def login():
             session['user'] = {'id': u['id'], 'email': u['email'],
                                'name': u.get('name', ''), 'phone': u.get('phone', '')}
             flash(f"Welcome back, {u.get('name', 'User')}!", 'success')
-            return redirect(request.args.get('next') or url_for('home'))
+            next_url = request.args.get('next', '')
+            if next_url and next_url.startswith('/'):
+                return redirect(next_url)
+            return redirect(url_for('home'))
         flash('Invalid email or password.', 'danger')
     return render_template('login.html')
 
