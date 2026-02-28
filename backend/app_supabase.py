@@ -40,6 +40,12 @@ app.permanent_session_lifetime = timedelta(minutes=30)
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+@app.errorhandler(500)
+def internal_error(e):
+    import traceback
+    log.error('500 error: %s\n%s', e, traceback.format_exc())
+    return render_template('base.html'), 500
+
 @app.before_request
 def make_session_permanent():
     session.permanent = True

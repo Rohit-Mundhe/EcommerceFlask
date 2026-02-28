@@ -3,7 +3,7 @@ services:
     name: shopzone
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --chdir backend app_supabase:app
+    startCommand: gunicorn --chdir backend --bind 0.0.0.0:$PORT --workers 1 --timeout 60 app_supabase:app
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"
