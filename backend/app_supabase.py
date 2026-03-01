@@ -7,8 +7,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 
 # ── Supabase ──────────────────────────────────────────────────────────────────
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError(
+        'SUPABASE_URL and SUPABASE_KEY environment variables must be set. '
+        'Add them to your WSGI configuration file on PythonAnywhere.'
+    )
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── Flask ─────────────────────────────────────────────────────────────────────
