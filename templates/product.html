@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} – ShopZone{% endblock %}
+{% block content %}
+<div class="container">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{{ url_for('home') }}">Home</a> ›
+    {% if product.category %}<a href="{{ url_for('home', category=product.category) }}">{{ product.category }}</a> › {% endif %}
+    <span>{{ product.name }}</span>
+  </nav>
+
+  <!-- Product detail -->
+  <div class="product-detail">
+    <div class="pd-image">
+      <img src="{{ product.image_url or 'https://placehold.co/500x400?text=No+Image' }}" alt="{{ product.name }}"/>
+    </div>
+    <div class="pd-info">
+      {% if product.category %}<span class="pd-cat-badge">{{ product.category }}</span>{% endif %}
+      <h1 class="pd-name">{{ product.name }}</h1>
+      <p class="pd-price">₹{{ "%.2f"|format(product.price) }}</p>
+      <div class="pd-badges">
+        <span class="badge-green">✓ In Stock</span>
+        <span class="badge-cod">💵 Cash on Delivery</span>
+        <span class="badge-free">🚚 Free Delivery above ₹999</span>
+      </div>
+      <p class="pd-desc">{{ product.description or 'No description available.' }}</p>
+      <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post" class="pd-form">
+        <label class="pd-qty-label">Quantity</label>
+        <div class="qty-row">
+          <button type="button" class="qty-btn" onclick="adjQty(-1)">−</button>
+          <input type="number" name="quantity" id="qty-input" value="1" min="1" max="99" class="qty-input"/>
+          <button type="button" class="qty-btn" onclick="adjQty(1)">+</button>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">🛒 Add to Cart</button>
+      </form>
+      <a href="{{ url_for('home') }}" class="btn btn-outline" style="margin-top:10px">← Continue Shopping</a>
+    </div>
+  </div>
+
+  <!-- Related products -->
+  {% if related %}
+  <div class="related-section">
+    <h2>Related Products</h2>
+    <div class="product-grid">
+      {% for p in related %}
+        <div class="product-card">
+          <a href="{{ url_for('product_detail', product_id=p.id) }}" class="card-img-link">
+            <img src="{{ p.image_url or 'https://placehold.co/300x220?text=No+Image' }}" alt="{{ p.name }}"/>
+          </a>
+          <div class="card-body">
+            <a href="{{ url_for('product_detail', product_id=p.id) }}"><h3 class="card-title">{{ p.name }}</h3></a>
+            <p class="card-price">₹{{ "%.2f"|format(p.price) }}</p>
+          </div>
+          <div class="card-footer">
+            <form action="{{ url_for('add_to_cart', product_id=p.id) }}" method="post">
+              <input type="hidden" name="quantity" value="1"/>
+              <button class="btn btn-primary btn-block">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

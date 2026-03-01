@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Shopping Cart – ShopZone{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">🛒 Shopping Cart</h1>
+
+  {% if cart_items %}
+  <div class="cart-layout">
+
+    <!-- Cart items -->
+    <div class="cart-items-col">
+      {% for item in cart_items %}
+      <div class="cart-item">
+        <img src="{{ item.image_url or 'https://placehold.co/100x80?text=IMG' }}" class="ci-img" alt="{{ item.name }}"/>
+        <div class="ci-info">
+          <a href="{{ url_for('product_detail', product_id=item.id) }}" class="ci-name">{{ item.name }}</a>
+          <p class="ci-cat">{{ item.category or '' }}</p>
+          <p class="ci-price">₹{{ "%.2f"|format(item.price) }} each</p>
+          <div class="ci-actions">
+            <form action="{{ url_for('update_cart', product_id=item.id) }}" method="post" class="ci-qty-form">
+              <button type="button" class="qty-btn" onclick="adjForm(this,-1)">−</button>
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="99"
+                     class="qty-input" onchange="this.form.submit()"/>
+              <button type="button" class="qty-btn" onclick="adjForm(this,1)">+</button>
+            </form>
+            <form action="{{ url_for('remove_from_cart', product_id=item.id) }}" method="post">
+              <button type="submit" class="btn-remove">🗑 Remove</button>
+            </form>
+          </div>
+        </div>
+        <div class="ci-subtotal">₹{{ "%.2f"|format(item.subtotal) }}</div>
+      </div>
+      {% endfor %}
+
+      <!-- Clear cart -->
+      <form action="{{ url_for('clear_cart') }}" method="post" style="text-align:right;margin-top:8px">
+        <button type="submit" class="btn btn-outline btn-sm">🗑 Clear Cart</button>
+      </form>
+    </div>
+
+    <!-- Order summary -->
+    <div class="cart-summary-col">
+      <div class="summary-card">
+        <h3>Price Summary</h3>
+        <div class="summary-row"><span>Items ({{ cart_items|length }})</span><span>₹{{ total }}</span></div>
+        <div class="summary-row"><span>Delivery</span><span class="green">FREE</span></div>
+        <div class="summary-row total-row"><span>Total Amount</span><span>₹{{ total }}</span></div>
+        <p class="savings-note">💵 Payment: Cash on Delivery</p>
+        <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block">Proceed to Checkout →</a>
+        <a href="{{ url_for('home') }}" class="btn btn-outline btn-block" style="margin-top:8px">Continue Shopping</a>
+      </div>
+    </div>
+
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🛒</div>
+    <h3>Your cart is empty!</h3>
+    <p>Looks like you haven't added anything yet.</p>
+    <a href="{{ url_for('home') }}" class="btn btn-primary">Start Shopping</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
