@@ -1,8 +1,13 @@
 import sys
 import os
 
-# Add the backend folder to the Python path
-sys.path.insert(0, os.path.dirname(__file__))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+# Load .env file if present (local development only)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from backend.app_supabase import app as application

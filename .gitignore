@@ -12,3 +12,4 @@ build/
 Thumbs.db
 flask_err.txt
 flask_out.txt
+pythonanywhere_wsgi.py
