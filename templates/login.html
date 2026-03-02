@@ -1,26 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Login – ShopZone{% endblock %}
+
 {% block content %}
-<div class="auth-page">
-  <div class="auth-card">
-    <div class="auth-logo">🛒 ShopZone</div>
-    <h2>Sign In</h2>
-    <p class="auth-sub">Welcome back! Please enter your details.</p>
-    <form method="post" action="{{ url_for('login', next=request.args.get('next','')) }}" novalidate>
-      <div class="form-group">
-        <label>Email address</label>
-        <input type="email" name="email" placeholder="you@example.com" required autofocus/>
+<div class="container d-flex justify-content-center align-items-center py-5" style="min-height:70vh">
+  <div class="card border-0 shadow" style="width:100%;max-width:420px">
+    <div class="card-body p-4 p-md-5">
+      <div class="text-center mb-4">
+        <i class="bi bi-bag-heart-fill text-warning" style="font-size:2.5rem"></i>
+        <h4 class="fw-bold mt-2 mb-1">Sign In</h4>
+        <p class="text-muted small">Welcome back to ShopZone</p>
       </div>
-      <div class="form-group">
-        <label>Password</label>
-        <div class="input-eye">
-          <input type="password" name="password" id="pwd" placeholder="Enter your password" required/>
-          <button type="button" class="eye-btn" onclick="togglePwd('pwd',this)">👁</button>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Email address</label>
+          <input type="email" name="email" class="form-control" placeholder="you@example.com" required autofocus>
         </div>
-      </div>
-      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-    </form>
-    <p class="auth-link">New to ShopZone? <a href="{{ url_for('register') }}">Create account</a></p>
+        <div class="mb-4">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-dark w-100 fw-semibold py-2">Sign In</button>
+      </form>
+      <p class="text-center mt-4 mb-0 small text-muted">
+        Don't have an account?
+        <a href="{{ url_for('register') }}" class="fw-semibold text-dark">Register</a>
+      </p>
+    </div>
   </div>
 </div>
 {% endblock %}

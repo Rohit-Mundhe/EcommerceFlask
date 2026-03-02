@@ -1,50 +1,64 @@
 {% extends "base.html" %}
 {% block title %}My Orders – ShopZone{% endblock %}
+
 {% block content %}
-<div class="container">
-  <h1 class="page-title">📦 My Orders</h1>
+<div class="container my-4">
+  <h4 class="fw-bold mb-4"><i class="bi bi-bag me-2"></i>My Orders</h4>
 
   {% if orders %}
     {% for o in orders %}
-    <div class="order-card">
-      <div class="order-header">
+    <div class="card border-0 shadow-sm mb-4">
+
+      <!-- Order header -->
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom">
         <div>
-          <span class="order-id">Order #{{ o.id }}</span>
-          <span class="order-date">{{ o.order_date[:10] if o.order_date else '' }}</span>
+          <span class="fw-bold">Order #{{ o.id }}</span>
+          <span class="text-muted small ms-3">
+            <i class="bi bi-calendar3 me-1"></i>
+            {{ o.order_date[:10] if o.order_date else 'N/A' }}
+          </span>
         </div>
-        <div>
-          <span class="status-badge status-{{ o.status }}">{{ o.status|title }}</span>
-          <span class="order-total-badge">₹{{ "%.2f"|format(o.total_amount or o.order_total or 0) }}</span>
-        </div>
+        <span class="badge rounded-pill {{ 'bg-success' if o.status == 'confirmed' else 'bg-secondary' }} px-3 py-2">
+          {{ o.status|title }}
+        </span>
       </div>
-      <div class="order-body">
-        <div class="order-items-list">
-          {% for item in o.items %}
-          {% if item.products %}
-          <div class="oi-row">
-            <img src="{{ item.products.image_url or 'https://placehold.co/60x50?text=IMG' }}" class="oi-img"/>
-            <div class="oi-info">
-              <p class="oi-name">{{ item.products.name }}</p>
-              <p class="oi-meta">Qty: {{ item.quantity }} &nbsp;×&nbsp; ₹{{ "%.2f"|format(item.price or item.products.price) }}</p>
-            </div>
-          </div>
-          {% endif %}
-          {% endfor %}
+
+      <!-- Items -->
+      {% for item in o.items %}
+      <div class="card-body d-flex gap-3 align-items-center py-3 border-bottom">
+        <img src="{{ item.products.image_url or 'https://placehold.co/60x60?text=?' }}"
+             class="rounded" style="width:60px;height:60px;object-fit:cover" alt="{{ item.products.name }}">
+        <div class="flex-grow-1">
+          <p class="mb-0 fw-semibold">{{ item.products.name }}</p>
+          <p class="mb-0 text-muted small">
+            Qty: {{ item.quantity }} &times; &#8377;{{ "%.2f"|format(item.price) }}
+          </p>
         </div>
-        <div class="order-meta">
-          <p><strong>Payment:</strong> {{ o.payment_method or 'Cash on Delivery' }}</p>
-          <p><strong>Deliver to:</strong> {{ o.shipping_name }}, {{ o.shipping_city }}</p>
-          {% if o.note %}<p><strong>Note:</strong> {{ o.note }}</p>{% endif %}
-        </div>
+        <span class="fw-bold">&#8377;{{ "%.2f"|format(item.quantity * item.price) }}</span>
+      </div>
+      {% endfor %}
+
+      <!-- Order footer -->
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+        <span class="small text-muted">
+          <i class="bi bi-geo-alt me-1"></i>
+          {{ o.shipping_city }}, {{ o.shipping_state }}
+          &nbsp;·&nbsp;
+          <i class="bi bi-cash-coin me-1"></i>Cash on Delivery
+        </span>
+        <span class="fw-bold">
+          Total: &#8377;{{ "%.2f"|format(o.total) }}
+        </span>
       </div>
     </div>
     {% endfor %}
+
   {% else %}
-  <div class="empty-state">
-    <div class="empty-icon">📦</div>
-    <h3>No orders yet!</h3>
-    <p>You haven't placed any orders yet.</p>
-    <a href="{{ url_for('home') }}" class="btn btn-primary">Shop Now</a>
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-bag-x display-4 d-block mb-3"></i>
+    <h5>No orders yet!</h5>
+    <p class="small">Browse our products and place your first order.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-dark mt-3 px-4">Start Shopping</a>
   </div>
   {% endif %}
 </div>
