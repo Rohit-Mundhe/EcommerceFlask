@@ -10,6 +10,3 @@ dist/
 build/
 .DS_Store
 Thumbs.db
-flask_err.txt
-flask_out.txt
-# pythonanywhere_wsgi.py  (kept in repo — credentials set inside)
