@@ -1,4 +1,9 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
+import ssl
+import httpx
 from datetime import timedelta
 from functools import wraps
 from supabase import create_client, Client
@@ -12,6 +17,17 @@ SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError('Set SUPABASE_URL and SUPABASE_KEY environment variables.')
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Corporate/college MITM proxies break SSL — replace the postgrest httpx
+# transport with a no-verify one when SSL_VERIFY=false (local dev only).
+if os.environ.get('SSL_VERIFY', 'true').lower() == 'false':
+    _nv = httpx.HTTPTransport(verify=False)
+    _session = supabase.postgrest.session
+    # Replace all mounts so HTTPS requests skip cert verification
+    for _pattern in list(_session._mounts.keys()):
+        if 'https' in str(_pattern):
+            _session._mounts[_pattern] = _nv
+    _session._transport = _nv
 
 # ── Flask ─────────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -243,12 +259,12 @@ def order_confirm(oid):
 def orders():
     uid  = get_user()['id']
     rows = supabase.table('orders').select('*').eq('user_id', uid)\
-               .order('order_date', desc=True).execute().data or []
+               .order('order_date', desc=True, nullsfirst=False).execute().data or []
     for o in rows:
-        o['items'] = supabase.table('order_items')\
+        o['order_items'] = supabase.table('order_items')\
             .select('*, products(*)').eq('order_id', o['id']).execute().data or []
-        o['total'] = sum(i['quantity'] * i['price'] for i in o['items'])
+        o['order_total'] = sum(i['quantity'] * i['price'] for i in o['order_items'])
     return render_template('orders.html', orders=rows)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

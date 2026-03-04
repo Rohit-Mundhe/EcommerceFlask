@@ -24,7 +24,7 @@
       </div>
 
       <!-- Items -->
-      {% for item in o.items %}
+      {% for item in o.order_items %}
       <div class="card-body d-flex gap-3 align-items-center py-3 border-bottom">
         <img src="{{ item.products.image_url or 'https://placehold.co/60x60?text=?' }}"
              class="rounded" style="width:60px;height:60px;object-fit:cover" alt="{{ item.products.name }}">
@@ -47,7 +47,7 @@
           <i class="bi bi-cash-coin me-1"></i>Cash on Delivery
         </span>
         <span class="fw-bold">
-          Total: &#8377;{{ "%.2f"|format(o.total) }}
+          Total: &#8377;{{ "%.2f"|format(o.order_total) }}
         </span>
       </div>
     </div>
