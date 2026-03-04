@@ -13,7 +13,7 @@ import sys
 import os
 
 # ── CHANGE THIS ───────────────────────────────────────────────────────────────
-USERNAME = 'YOURUSERNAME'   # <-- replace with your PythonAnywhere username
+USERNAME = 'Indianwomanengineer'
 
 sys.path.insert(0, f'/home/{USERNAME}/EcommerceFlask')
 
